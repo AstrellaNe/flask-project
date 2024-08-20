@@ -6,17 +6,21 @@ from flask import (
     redirect,
     url_for,
     abort,
+    make_response,
     request
 )
 import os
 from validate import validate, validate_on_edit
 from user_repository import UserRepository
+from cookie_user_repository import CookieUserRepository
+
 
 app = Flask(__name__)
 app.secret_key = '%^(**###'
 
-# Инициализация репозитория пользователей
-repo = UserRepository()
+
+# Инициализация репозитория пользователей (файловый репозиторий)
+file_repo = UserRepository()
 
 
 # Обработчик 404
@@ -28,6 +32,7 @@ def page_not_found(e):
 # Маршрут для создания нового пользователя
 @app.route('/users/new', methods=['GET', 'POST'])
 def users_new():
+    cookie_repo = CookieUserRepository(request)
     if request.method == 'POST':
         user = request.form.to_dict()
         errors = validate(user)
@@ -35,9 +40,13 @@ def users_new():
         if errors:
             return render_template('users/new.html', user=user, errors=errors)
 
-        repo.save(user)
+        file_repo.save(user)  # Сохранение в файл
+        users = cookie_repo.save(user)  # Сохранение в куки
+
+        response = make_response(redirect(url_for('users_get')))
+        cookie_repo.save_users_to_response(response)  # Сохранение изменений в куки
         flash('Пользователь успешно добавлен', 'success')
-        return redirect(url_for('users_get'))
+        return response
 
     return render_template('users/new.html', user={}, errors={})
 
@@ -45,8 +54,9 @@ def users_new():
 # Маршрут для отображения списка пользователей
 @app.route('/users', methods=['GET'])
 def users_get():
+    cookie_repo = CookieUserRepository(request)
     search_query = request.args.get('search', '').strip().lower()
-    users = repo.get_content()
+    users = file_repo.get_content() + cookie_repo.get_content()  # Объединение данных из файла и куки
     if search_query:
         users = [user for user in users
                  if search_query in user['nickname'].lower()
@@ -59,7 +69,8 @@ def users_get():
 # Маршрут для отображения деталей пользователя
 @app.route('/users/<string:id>', methods=['GET'])
 def user_detail(id):
-    user = repo.find(str(id))  # id должен быть строкой для сравнения в JSON
+    cookie_repo = CookieUserRepository(request)
+    user = file_repo.find(str(id)) or cookie_repo.find(str(id))  # Поиск пользователя в файле и куках
 
     if user is None:
         abort(404)
@@ -70,7 +81,8 @@ def user_detail(id):
 # Редактирование пользователя - форма
 @app.route('/users/<string:id>/edit', methods=['GET'])
 def edit_user(id):
-    user = repo.find(str(id))
+    cookie_repo = CookieUserRepository(request)
+    user = file_repo.find(str(id)) or cookie_repo.find(str(id))  # Поиск пользователя в файле и куках
     if user is None:
         abort(404)
     errors = {}
@@ -79,9 +91,10 @@ def edit_user(id):
 
 
 # Сохранение изменений после редактирования
-@app.route('/users/<int:id>/update', methods=['POST'])
+@app.route('/users/<string:id>/update', methods=['POST'])
 def update_user(id):
-    user = repo.find(str(id))
+    cookie_repo = CookieUserRepository(request)
+    user = file_repo.find(str(id)) or cookie_repo.find(str(id))
     if user is None:
         abort(404)
 
@@ -96,23 +109,32 @@ def update_user(id):
     user['nickname'] = data['nickname']
     user['email'] = data['email']
 
-    repo.save(user)
+    file_repo.save(user)  # Сохранение в файл
+    cookie_repo.save(user)  # Сохранение в куки
+
+    response = make_response(redirect(url_for('users_get')))
+    cookie_repo.save_users_to_response(response)  # Сохранение изменений в куки
 
     flash('Пользовательские данные успешно обновлены', 'success')
-    return redirect(url_for('users_get'))  # Редирект на список пользователей
+    return response
 
 
 # Удаление пользователя
 @app.route('/users/<string:id>/delete', methods=['POST'])
 def delete_user(id):
-    user = repo.find(id)
+    cookie_repo = CookieUserRepository(request)
+    user = file_repo.find(id) or cookie_repo.find(id)
     if user is None:
         return 'Пользователь не найден', 404
 
-    repo.delete(user)  # Удаляем пользователя и сохраняем изменения
+    file_repo.delete(user)  # Удаление из файла
+    cookie_repo.delete(user)  # Удаление из куков
+
+    response = make_response(redirect(url_for('users_get')))
+    cookie_repo.save_users_to_response(response)  # Сохранение изменений в куки
 
     flash('Пользователь успешно удален', 'success')
-    return redirect(url_for('users_get'))
+    return response
 
 
 # Маршрут для отображения приветствия (GET и POST)
@@ -129,7 +151,7 @@ def index_router():
     return redirect(url_for('users_get'))
 
 
-# Маршрут для отображения информации о курсе
+# Маршрут для отображения информации о курсе (пока опционально)
 @app.route('/courses/<string:id>', methods=['GET'])
 def courses(id):
     return f'Course id: {id}'
