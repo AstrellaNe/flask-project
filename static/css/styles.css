@@ -1,0 +1,167 @@
+/* Основные стили */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f3f4f6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+#wrapper {
+    display: flex;
+    width: 80%;
+    max-width: 1200px;
+    margin: auto;
+}
+
+#sidebar {
+    background-color: #6a0dad;
+    color: #fff;
+    padding: 1rem;
+    width: 250px;
+    height: 100%;
+    border-radius: 12px;
+    margin-right: 20px;
+}
+
+#sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#sidebar ul li {
+    margin: 1rem 0;
+}
+
+#sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.1rem;
+    display: block;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+#sidebar ul li a:hover {
+    background-color: #4b0082;
+}
+
+#content {
+    flex-grow: 1;
+    padding: 2rem;
+    background-color: #e0f7fa;
+    border-radius: 12px;
+}
+
+.card {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.card-title {
+    color: #6a0dad;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-body {
+    font-size: 1rem;
+    color: #333;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.user-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.user-list .user-item {
+    background-color: #f9f9f9;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-list .user-item strong {
+    color: #6a0dad;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #6a0dad;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #4b0082;
+}
+
+.btn-secondary {
+    background-color: #009688;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #00796b;
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+}
+
+.btn-info {
+    background-color: #00acc1;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background-color: #00838f;
+}
+
+.error {
+    color: #f44336;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}

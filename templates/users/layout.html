@@ -1,0 +1,25 @@
+<!-- users/layout.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Flask проект{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div id="wrapper">
+        <nav id="sidebar">
+            {% block sidebar %}
+                <ul>
+                    <li><a href="{{ url_for('home') }}" class="btn btn-sidebar">Главная</a></li>
+                    <li><a href="{{ url_for('users_get') }}" class="btn btn-sidebar">Пользователи</a></li>
+                </ul>
+            {% endblock %}
+        </nav>
+        <main id="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

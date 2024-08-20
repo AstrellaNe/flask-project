@@ -1,0 +1,42 @@
+<!-- users/show.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<div id="wrapper">
+    <div id="sidebar">
+        <ul>
+            <li><a href="{{ url_for('home') }}">Главная</a></li>
+            <li><a href="{{ url_for('users_get') }}">Пользователи</a></li>
+        </ul>
+    </div>
+    <div id="content">
+        <div class="card">
+            <h1 class="card-title">Профиль пользователя</h1>
+            <div class="card-body">
+                <p><strong>ID:</strong> {{ user['id'] }}</p>
+                <p><strong>Никнейм:</strong> {{ user['nickname'] }}</p>
+                <p><strong>Email:</strong> {{ user['email'] }}</p>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group">
+                    <!-- Кнопка для редактирования пользователя -->
+                    <a href="{{ url_for('edit_user', id=user['id']) }}" class="btn btn-info">Редактировать</a>
+
+                    <!-- Форма для удаления пользователя с подтверждением -->
+                    <form action="{{ url_for('delete_user', id=user['id']) }}" method="post" onsubmit="return confirm('Вы уверены, что хотите удалить пользователя?');" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <a href="{{ url_for('users_get') }}" class="btn btn-secondary">Назад к списку пользователей</a>
+    </div>
+</div>
+</body>
+</html>

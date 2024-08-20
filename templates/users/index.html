@@ -1,0 +1,16 @@
+<!-- users/index.html -->
+{% extends "users/layout.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <h1>Добро пожаловать на Flask проект!</h1>
+    <p>Здесь вы можете управлять списком пользователей и создавать новые записи.</p>
+
+    <div class="buttons-wrapper">
+        <a href="{{ url_for('users_new') }}" class="btn btn-primary">Создать нового пользователя</a>
+        <a href="{{ url_for('users_get') }}" class="btn btn-secondary">Просмотр списка пользователей</a>
+    </div>
+</div>
+{% endblock %}

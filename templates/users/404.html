@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница не найдена</title>
+    <style>
+        h1 {
+            color: red;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .button-container a {
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ошибка 404 - Страница не найдена</h1>
+    <p>К сожалению, запрашиваемая страница не существует. Возможно, пользователь был удален или вы ошиблись в адресе.</p>
+    <div class="button-container">
+        <a href="{{ url_for('users_get') }}">Вернуться к списку пользователей</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!-- users/new.html -->
+{% extends 'users/layout.html' %}
+
+{% block title %}Создать нового пользователя{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <h1>Создать пользователя</h1>
+        <form action="{{ url_for('users_new') }}" method="post" class="form">
+            <div class="form-group">
+                <label for="nickname">Nickname:</label>
+                <input type="text" id="nickname" name="nickname" value="{{ user.get('nickname', '') }}" class="form-control">
+                {% if errors.get('nickname') %}
+                    <div class="error">{{ errors['nickname'] }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ user.get('email', '') }}" class="form-control">
+                {% if errors.get('email') %}
+                    <div class="error">{{ errors['email'] }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </form>
+    </div>
+{% endblock %}
