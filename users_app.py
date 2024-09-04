@@ -10,23 +10,49 @@ from flask import (
     session  # Импортируем session
 )
 from validate import validate, validate_on_edit
-from session_user_repository import SessionUserRepository
+from user_repository import UserRepository
+from dotenv import load_dotenv
+import os
+import psycopg2
+from psycopg2.extras import DictCursor
+
+# Загрузка переменных окружения из .env
+load_dotenv()
+
+# Подключение к базе данных
+DATABASE_URL = os.getenv('DATABASE_URL',
+                         'postgresql://scrat:nuts@127.0.0.1:5432/users')
+conn = psycopg2.connect(DATABASE_URL)
+
+# Получение секретного ключа из переменных окружения или его генерация
+secret_key = os.getenv('SECRET_KEY', os.urandom(24))
 
 
+# Инициализация Flask приложения
 app = Flask(__name__)
-app.secret_key = '%^(**###'
+app.secret_key = secret_key  # Используем секретный ключ
 
 
 # Инициализация репозитория пользователей
-repo = SessionUserRepository()
+repo = UserRepository(conn)
 
-# Указываем путь к файлу с данными пользователей
+
+# путь к файлу с данными пользователей (для файлового хранилища)
 USER_DATA_FILE = './data/users.json'
 
-# Обработчик 404
+
+# Обработчик ошибки 404 (страница не найдена)
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('users/404.html'), 404
+
+
+# Функция для инициализации базы данных
+def init_db():
+    with conn.cursor() as cursor:
+        with open('./data/init.sql', 'r') as f:
+            cursor.execute(f.read())
+        conn.commit()
 
 
 # Маршрут для создания нового пользователя
@@ -37,7 +63,8 @@ def users_new():
         errors = validate(user)
 
         if errors:
-            return render_template('users/new.html', user=user, errors=errors)
+            return render_template('users/new.html',
+                                   user=user, errors=errors)
 
         repo.save(user)
         flash('Пользователь успешно добавлен', 'success')
@@ -67,7 +94,7 @@ def user_detail(id):
 
     if user is None:
         abort(404)
-    
+
     return render_template('users/show.html', user=user)
 
 
@@ -83,60 +110,43 @@ def edit_user(id):
 
 
 # Сохранение изменений после редактирования
-@app.route('/users/<string:id>/update', methods=['POST'])
+@app.route('/users/<int:id>/update', methods=['GET', 'POST'])
 def update_user(id):
-    user = repo.find(str(id))
-    if user is None:
+    user = repo.find(id)
+    if not user:
         abort(404)
 
-    data = request.form.to_dict()
-    errors = validate_on_edit(data)
+    if request.method == 'POST':
+        updated_user = request.form.to_dict()
+        errors = validate_on_edit(updated_user)
 
-    if errors:
-        return render_template('users/edit.html',
-                               user=user, errors=errors), 422
+        if errors:
+            return render_template('users/edit.html', user=user, errors=errors)
 
-    # Обновление данных пользователя
-    user['nickname'] = data['nickname']
-    user['email'] = data['email']
+        # Удаляем поле user_password, если оно пустое, чтобы не обновлять пароль
+        if not updated_user.get('user_password'):
+            updated_user.pop('user_password', None)
 
-    repo.save(user)
+        updated_user['id'] = id
+        repo.update(updated_user)
+        flash('Информация о пользователе успешно обновлена', 'success')
+        return redirect(url_for('users_get', id=id))
 
-    flash('Пользовательские данные успешно обновлены', 'success')
-    return redirect(url_for('users_get'))
+    return render_template('users/edit.html', user=user, errors={})
 
 
 # Удаление пользователя
-@app.route('/users/<string:id>/delete', methods=['POST'])
+@app.route('/users/<int:id>/delete', methods=['POST'])
 def delete_user(id):
-    user = repo.find(id)
-    if user is None:
-        return 'Пользователь не найден', 404
-
-    repo.delete(user)
-
+    repo.delete(id)
     flash('Пользователь успешно удален', 'success')
     return redirect(url_for('users_get'))
 
 
-# Маршрут для отображения приветствия (GET и POST)
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        return 'Hello, ты используешь метод POST для индекса!'
-    return render_template('users/index.html')
-
-
 # Маршрут для отображения index
-@app.route('/index.html', methods=['GET'])
-def index_router():
+@app.route('/', methods=['GET'])
+def home():
     return redirect(url_for('users_get'))
-
-
-# Маршрут для отображения информации о курсе
-@app.route('/courses/<string:id>', methods=['GET'])
-def courses(id):
-    return f'Course id: {id}'
 
 
 # Технический маршрут для очистки сессии
@@ -147,4 +157,5 @@ def clear_session():
 
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True)

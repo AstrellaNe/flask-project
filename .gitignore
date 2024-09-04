@@ -1,4 +1,5 @@
 /.venv/
+/.env/
 /old_ver/
 /dist/
 **/__pycache__/

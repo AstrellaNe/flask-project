@@ -11,6 +11,7 @@ python = "^3.10"
 Flask = "^3.0.3"
 data = "^0.4"
 flake8 = "^7.1.1"
+gunicorn = "^23.0.0"
 
 
 [build-system]

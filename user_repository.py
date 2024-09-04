@@ -1,44 +1,45 @@
-# user_repository.py
-import json
-import sys
-import uuid
-from utils import save_users
+from psycopg2.extras import DictCursor
 
 class UserRepository:
-    def __init__(self):
-        with open("./data/users.json", 'r') as f:
-            self.users = json.load(f)  # Загрузка всего массива JSON
+    def __init__(self, conn):
+        self.conn = conn
 
     def get_content(self):
-        return self.users
+        with self.conn.cursor(cursor_factory=DictCursor) as cur:
+            cur.execute("SELECT * FROM users")
+            users = cur.fetchall()
+            return [dict(user) for user in users]
 
     def find(self, id):
-        try:
-            for user in self.users:
-                if str(user['id']) == str(id):
-                    return user
-            return None  # Возврат None, если пользователь не найден
-        except KeyError:
-            sys.stderr.write(f'Wrong user id: {id}')
-            raise
+        with self.conn.cursor(cursor_factory=DictCursor) as cur:
+            cur.execute("SELECT * FROM users WHERE id = %s", (id,))
+            user = cur.fetchone()
+            return dict(user) if user else None
 
-    def save(self, user):
-        if not (user.get('nickname') and user.get('email')):
-            raise Exception(f'Wrong data: {json.dumps(user)}')
+    def create(self, user):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO users (nickname, email, user_password) VALUES (%s, %s, %s) RETURNING id",
+                (user['nickname'], user['email'], user['user_password'])
+            )
+            user['id'] = cur.fetchone()[0]
+        self.conn.commit()
 
-        # Генерация нового UUID если это новый пользователь
-        if 'id' not in user or not user['id']:
-            user['id'] = str(uuid.uuid4())  # Присваиваем UUID
+    def update(self, user):
+        with self.conn.cursor() as cur:
+            if 'user_password' in user and user['user_password']:
+                cur.execute(
+                    "UPDATE users SET nickname = %s, email = %s, user_password = %s WHERE id = %s",
+                    (user['nickname'], user['email'], user['user_password'], user['id'])
+            )
+            else:
+                cur.execute(
+                    "UPDATE users SET nickname = %s, email = %s WHERE id = %s",
+                    (user['nickname'], user['email'], user['id'])
+                )
+        self.conn.commit()
 
-        existing_user = self.find(user['id'])
-        if existing_user:
-            self.users.remove(existing_user)
-        self.users.append(user)
-        self.save_users()
-
-    def delete(self, user):
-        self.users.remove(user)  # Удаляем пользователя из списка
-        self.save_users()  # Сохраняем изменения
-
-    def save_users(self):
-        save_users(self.users)  # Сохраняем всех пользователей
+    def delete(self, id):
+        with self.conn.cursor() as cur:
+            cur.execute("DELETE FROM users WHERE id = %s", (id,))
+        self.conn.commit()
