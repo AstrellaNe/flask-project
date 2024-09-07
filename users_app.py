@@ -14,7 +14,6 @@ from user_repository import UserRepository
 from dotenv import load_dotenv
 import os
 import psycopg2
-from psycopg2.extras import DictCursor
 
 # Загрузка переменных окружения из .env
 load_dotenv()
@@ -22,7 +21,12 @@ load_dotenv()
 # Подключение к базе данных
 DATABASE_URL = os.getenv('DATABASE_URL',
                          'postgresql://scrat:nuts@127.0.0.1:5432/users')
-conn = psycopg2.connect(DATABASE_URL)
+try:
+    conn = psycopg2.connect(DATABASE_URL)
+
+except:
+    print('Cannot connect to Database')
+
 
 # Получение секретного ключа из переменных окружения или его генерация
 secret_key = os.getenv('SECRET_KEY', os.urandom(24))
